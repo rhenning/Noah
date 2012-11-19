@@ -8,6 +8,7 @@ describe "Using the Ephemeral Model", :reset_redis => true do
     @good_ephemeral = Noah::Ephemeral.new(@edata)
     @missing_path = Noah::Ephemeral.new(@emissing_path)
     @missing_data = Noah::Ephemeral.new(@emissing_data)
+    @expire_ephemeral = Noah::Ephemeral.new(@edata.merge(:lifetime => 5))
   end
   before(:each) do
     Ohm.redis.flushdb
@@ -41,6 +42,11 @@ describe "Using the Ephemeral Model", :reset_redis => true do
       @good_ephemeral.save
       @good_ephemeral.delete
       Noah::Ephemeral[@good_ephemeral.id].should == nil
+    end
+    it "expire a Noah::Ephemeral when its lifetime expires" do
+      @expire_ephemeral.save
+      sleep(@expire_ephemeral.lifetime.to_i + 5)
+      Noah::Ephemeral[@expire_ephemeral.id].path.should == nil
     end
     it "should allow reserved keywords as subpaths" do
       Noah::PROTECTED_PATHS.each do |path|

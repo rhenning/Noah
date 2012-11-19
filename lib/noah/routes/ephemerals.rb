@@ -5,7 +5,7 @@ class Noah::App
 
   get '/ephemerals/*' do
     params["splat"].size == 0 ? (halt 404) : (e=Noah::Ephemeral.find(:path => "/#{params["splat"][0]}").first)
-    (halt 404) if e.nil?
+    (halt 404) if e.nil? || e.path.nil?
     content_type "application/octet-stream"
     e.data.nil? ? "" : "#{e.data}"
   end
@@ -21,7 +21,7 @@ class Noah::App
   put '/ephemerals/*' do
     raise("Data too large") if request.body.size > settings.ephemeral_size
     d = request.body.read  || nil
-    opts = {:path => "/#{params[:splat][0]}", :data => d}
+    opts = {:path => "/#{params[:splat][0]}", :data => d, :lifetime => params[:lifetime]}
     e = Noah::Ephemeral.find_or_create(opts)
     if e.valid?
       action = e.is_new? ? "create" : "update"

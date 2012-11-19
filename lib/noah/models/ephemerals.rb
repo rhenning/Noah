@@ -9,6 +9,11 @@ module Noah
 
     index :path
 
+    def save
+      super
+      update_ttl(lifetime) if lifetime
+    end
+
     def validate
       super
       assert_present :path
@@ -28,9 +33,10 @@ module Noah
     class << self
     def find_or_create(opts = {})
       begin
-        path, data = opts[:path], opts[:data]
+        path, data, lifetime = opts[:path], opts[:data], opts[:lifetime]
         find(:path => path).first.nil? ? (obj = new(:path => path)) : (obj = find(:path => path).first)
         obj.data = data
+        obj.lifetime = lifetime
         if obj.valid?
           obj.save
         end

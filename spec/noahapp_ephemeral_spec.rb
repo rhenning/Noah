@@ -5,6 +5,7 @@ describe "Using the Ephemeral API", :reset_redis => true do
     Ohm.redis.flushdb
     Noah::Ephemeral.create(:path => "/foo/bar/baz", :data => "value1")
     Noah::Ephemeral.create(:path => "/baz/bar")
+    Noah::Ephemeral.create(:path => "/go/away", :lifetime => 5, :data => "pft")
   end
   after(:each) do
     Ohm.redis.flushdb
@@ -41,6 +42,16 @@ describe "Using the Ephemeral API", :reset_redis => true do
         response['error_message'].should == 'Resource not found'
         response['result'].should == 'failure'
       end
+
+      it "ephemeral with a lifetime should disappear once expired" do
+        sleep 10
+        get '/ephemerals/go/away'
+        last_response.should_not be_ok
+        last_response.status.should == 404
+        response = last_response.should return_json
+        response['error_message'].should == 'Resource not found'
+        response['result'].should == 'failure'
+      end
     end
 
     describe "PUT" do
@@ -62,6 +73,17 @@ describe "Using the Ephemeral API", :reset_redis => true do
         response['action'].should == 'create'
         response['id'].nil?.should == false
         response['path'].should == '/bang/whiz'
+        response['data'].should == nil
+      end
+
+      it "new ephemeral with lifetime should work" do
+        put '/ephemerals/go/away?lifetime=5'
+        last_response.should be_ok
+        response = last_response.should return_json
+        response['result'].should == 'success'
+        response['action'].should == 'create'
+        response['id'].nil?.should == false
+        response['path'].should == '/go/away'
         response['data'].should == nil
       end
 

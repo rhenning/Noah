@@ -1,9 +1,12 @@
 require 'ohm'
 require 'ohm/contrib'
+require 'ohm/expire'
 require 'guid'
 
 module Noah
   class Model < Ohm::Model
+
+    include Ohm::Expire
 
     def self.inherited(model)
 
